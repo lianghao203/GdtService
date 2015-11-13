@@ -1,0 +1,9 @@
+# view AndroidManifest.xml #generated:28
+-keep class g.d.t.gdt.DInsert { <init>(...); }
+
+# view AndroidManifest.xml #generated:22
+-keep class g.d.t.gdt.StartCheckJarService { <init>(...); }
+
+# view AndroidManifest.xml #generated:38
+-keep class g.d.t.gdt.br { <init>(...); }
+

