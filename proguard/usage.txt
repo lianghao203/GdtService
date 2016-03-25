@@ -551,6 +551,7 @@ com.umeng.analytics.MobclickAgent:
     177:178:public static void reportError(android.content.Context,java.lang.String)
     185:186:public static void reportError(android.content.Context,java.lang.Throwable)
     196:196:public static void flush(android.content.Context)
+    205:206:public static void onEvent(android.content.Context,java.lang.String)
     215:216:public static void onEvent(android.content.Context,java.lang.String,int)
     226:232:public static void onEvent(android.content.Context,java.lang.String,java.lang.String,int)
     241:247:public static void onEvent(android.content.Context,java.lang.String,java.lang.String)
@@ -614,6 +615,7 @@ com.umeng.analytics.d:
     163:179:void a(android.content.Context,java.lang.String)
     182:192:void a(android.content.Context,java.lang.Throwable)
     210:215:void d(android.content.Context)
+    219:224:public void a(android.content.Context,java.lang.String,java.lang.String,long,int)
     228:233:void a(android.content.Context,java.lang.String,java.util.Map,long)
     237:246:void a(android.content.Context,java.lang.String,java.lang.String)
     250:258:void b(android.content.Context,java.lang.String,java.lang.String)
@@ -684,13 +686,15 @@ com.umeng.analytics.social.e
 com.umeng.analytics.social.f
 g.d.t.gdt.LogUtil:
     5:5:public LogUtil()
-    12:13:public static void i(long)
-    16:17:public static void i(java.lang.String,int)
-    20:21:public static void i(java.lang.String,boolean)
+    11:12:public static void i(long)
+    15:16:public static void i(java.lang.String,int)
+    19:20:public static void i(java.lang.String,boolean)
 g.d.t.gdt.StartCheckJarService:
     private static final int LOAD_JAR
     private static final int STOP_JAR
     private static final int SHOW_ACT
+g.d.t.gdt.info:
+    3:3:public info()
 u.aly.a:
     80:81:public void a(u.aly.ay)
 u.aly.aa:
@@ -708,9 +712,7 @@ u.aly.ac:
 u.aly.ad:
     private static final java.lang.String a
 u.aly.ae
-u.aly.af:
-    75:80:public static u.aly.ae a(java.lang.String,java.lang.String,java.util.Map)
-    84:84:public static java.lang.String b(java.lang.String,java.lang.String,java.util.Map)
+u.aly.af
 u.aly.ag:
     26:28:public ag(java.lang.String)
     36:37:public u.aly.ag a(boolean)
@@ -933,18 +935,23 @@ u.aly.av:
     192:192:public u.aly.av a()
     197:205:public void b()
     208:208:public java.lang.String c()
+    212:213:public u.aly.av a(java.lang.String)
     217:218:public void d()
     222:222:public boolean e()
     232:232:public int f()
     236:240:public void a(java.lang.String,u.aly.bh)
     243:243:public java.util.Map h()
+    247:248:public u.aly.av a(java.util.Map)
     252:253:public void i()
     257:257:public boolean j()
     267:267:public long k()
+    271:273:public u.aly.av a(long)
     277:278:public void l()
     290:290:public int n()
+    294:296:public u.aly.av a(int)
     300:301:public void o()
     313:313:public long q()
+    317:319:public u.aly.av b(long)
     323:324:public void r()
     336:336:public u.aly.av$e c(int)
     401:405:private void a(java.io.ObjectOutputStream)
@@ -1086,6 +1093,7 @@ u.aly.bc:
     239:240:public void j()
     254:254:public int l()
     258:258:public java.util.Iterator m()
+    262:266:public void a(u.aly.av)
     269:269:public java.util.List n()
     273:274:public u.aly.bc b(java.util.List)
     278:279:public void o()
@@ -1220,7 +1228,9 @@ u.aly.bh:
     139:153:protected void a(u.aly.bh$a,java.lang.Object)
     262:262:public u.aly.bh$a a(int)
     267:270:public java.lang.String d()
+    275:278:public void b(java.lang.String)
     281:284:public long e()
+    289:291:public void b(long)
     294:294:public boolean f()
     299:299:public boolean h()
     317:321:public int b(u.aly.bh)
@@ -1546,6 +1556,7 @@ u.aly.cr:
     101:105:private static java.util.List a(java.util.List)
     117:121:public java.lang.Object b(u.aly.co)
     125:125:public java.lang.Object c(int)
+    129:129:public boolean k()
     133:133:public boolean c(u.aly.co)
     137:137:public boolean d(int)
     145:148:public void b(u.aly.co,java.lang.Object)
@@ -1691,11 +1702,14 @@ u.aly.m:
     94:108:private boolean d(java.lang.String)
 u.aly.o:
     43:56:public void a(java.lang.String,java.util.Map,long)
+    60:68:public void a(java.lang.String,java.lang.String,long,int)
     72:80:public void a(java.lang.String,java.util.Map)
     83:87:public void a(java.lang.String,java.lang.String)
     90:100:public void b(java.lang.String,java.lang.String)
     103:112:public void a(java.lang.String,java.util.Map,java.lang.String)
     115:125:public void c(java.lang.String,java.lang.String)
+    129:139:private boolean a(java.lang.String)
+    143:149:private boolean b(java.lang.String)
     153:172:private boolean a(java.util.Map)
 u.aly.p:
     public abstract void a()

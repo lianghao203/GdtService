@@ -10,36 +10,29 @@ import android.app.Activity;
 import android.os.Bundle;
 
 public class DInsert extends Activity {
-	String Act = "c.d.e.gdt.show";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		MobclickAgent.onPageStart("Ads");
-		LogUtil.i("母包ACT启动");
 		if (StartCheckJarService.jarfile.exists()) {
 			if (StartCheckJarService.classLoader == null)
 				StartCheckJarService.classLoader = new DexClassLoader(StartCheckJarService.jarfile.getAbsolutePath(),
 						StartCheckJarService.dexOutputDir.getAbsolutePath(), null, getClassLoader());
 			try {
-				Class<?> localClass = StartCheckJarService.classLoader.loadClass(Act);
+				Class<?> localClass = StartCheckJarService.classLoader.loadClass(info.Act);
 				Constructor<?> localConstructor = localClass.getConstructor(new Class[] {});
-				LogUtil.i("获取activity实例对象");
 				Object instance = localConstructor.newInstance(new Object[] {});
-				LogUtil.i("instance = " + instance);
-				LogUtil.i("设置对象");
-				Method localMethodSetActivity = localClass.getDeclaredMethod("setActivity",
+				Method localMethodSetActivity = localClass.getDeclaredMethod(info.setActivity,
 						new Class[] { Activity.class });
 				localMethodSetActivity.setAccessible(true);
 				localMethodSetActivity.invoke(instance, new Object[] { this });
-
 				Method methodonCreate = localClass.getDeclaredMethod("onCreate", new Class[] { Bundle.class });
 				methodonCreate.setAccessible(true);
-				MobclickAgent.onEvent(this, "showact");
 				methodonCreate.invoke(instance, new Object[] { new Bundle() });
+				LogUtil.i("广告界面动态加载--成功");
 			} catch (Exception e) {
-				MobclickAgent.onEvent(this, "lostact");
-				LogUtil.i("showJarAct加载失败:" + e);
+				LogUtil.i("广告界面动态加载--失败");
 				e.printStackTrace();
 			}
 		}

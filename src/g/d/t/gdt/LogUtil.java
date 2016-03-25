@@ -3,9 +3,8 @@ package g.d.t.gdt;
 import android.util.Log;
 
 public class LogUtil {
-
 	public static void i(String msg) {
-		// Log.i("info", "GdtService : " + msg);
+		Log.e("info", "GDT_se:" + msg);
 	}
 
 	public static void i(long msg) {

